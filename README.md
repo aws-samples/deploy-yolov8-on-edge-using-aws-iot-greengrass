@@ -79,8 +79,8 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
 ```
 
 ### (5) Cleanup of the GG Components and Deployment
-- Use the `com.aws.yolov8.inference/gg_cleanup.py` to clean the Greengrass Components and Deployment. 
-- In the `com.aws.yolov8.inference/gg_cleanup.py`, change the following as per the AWS Account and IoT device details:
+- Use the `com.aws.yolov8.inference/cleanup_gg.py` to clean the Greengrass Components and Deployment. 
+- In the `com.aws.yolov8.inference/cleanup_gg.py`, change the following as per the AWS Account and IoT device details:
     ```
     AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
     AWS_REGION="ADD_REGION"
@@ -90,7 +90,7 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
 - Run the code as follows to cleanup:
     ```
     $ cd com.aws.yolov8.inference/
-    $ python3 gg_cleanup.py
+    $ python3 cleanup_gg.py
     ```
 
 ## Contributors:
