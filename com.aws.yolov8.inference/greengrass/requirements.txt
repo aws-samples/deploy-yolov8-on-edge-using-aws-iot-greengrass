@@ -1,0 +1,9 @@
+--find-links https://download.pytorch.org/whl/torch_stable.html
+awsiotsdk
+numpy
+opencv_python
+torch
+onnxruntime==1.14.0
+ultralytics
+tensorrt
+pycuda

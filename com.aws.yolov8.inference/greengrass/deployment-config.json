@@ -1,0 +1,12 @@
+{
+  "targetArn": "arn:aws:iot:AWS_REGION:AWS_ACCOUNT_NUM:thing/DEV_IOT_THING",
+  "deploymentName": "DEV_IOT_THING_GROUP",
+  "components": {
+    "com.aws.yolov8.inference": {
+      "componentVersion": "0.0.0",
+      "configurationUpdate": {
+        "merge": ""
+      }
+    }
+  }
+}

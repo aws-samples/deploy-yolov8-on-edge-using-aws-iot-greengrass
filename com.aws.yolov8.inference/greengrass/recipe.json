@@ -1,0 +1,57 @@
+{
+  "RecipeFormatVersion": "2020-01-25",
+  "ComponentName": "{COMPONENT_NAME}",
+  "ComponentVersion": "{COMPONENT_VERSION}",
+  "ComponentDescription": "YOLOv8 Inference Component",
+  "ComponentPublisher": "AWS Samples",
+  "ComponentConfiguration": {
+    "DefaultConfiguration": {
+      "Configuration": {
+        "event_topic": "inference/input",
+        "output_topic": "inference/output",
+        "camera_id": "0",
+        "model_loc": "models/yolov8n.trt"
+      },
+      "accessControl": {
+        "aws.greengrass.ipc.mqttproxy": {
+          "aws.proserve.imodal.cvml.secondary:mqttproxy:1": {
+            "operations": [
+              "*"
+            ],
+            "resources": [
+              "*"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "Manifests": [
+    {
+      "Platform": {
+        "os": "all"
+      },
+      "Artifacts": [
+        {
+          "URI": "s3://BUCKET_NAME/COMPONENT_NAME/COMPONENT_VERSION/greengrass.zip",
+          "Unarchive": "ZIP"
+        }
+      ],
+      "Lifecycle": {
+        "Install": {
+          "Script": "python3 -m pip install -r {artifacts:decompressedPath}/greengrass/requirements.txt",
+          "RequiresPrivilege": "true"
+        },
+        "Run": {
+          "Script": "python3 -u {artifacts:decompressedPath}/greengrass/main.py --config '''{configuration:/Configuration}'''",
+          "RequiresPrivilege": "true",
+          "Timeout": 1200
+        },
+        "Shutdown": {
+          "Script": "echo \"INFERENCE CODE SHUTTING DOWN\"",
+          "RequiresPrivilege": "true"
+        }
+      }
+    }
+  ]
+}
