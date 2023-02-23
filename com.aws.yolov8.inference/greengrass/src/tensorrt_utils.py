@@ -19,14 +19,15 @@ class HostDeviceMem(object):
 
 class TrtModel:
     def __init__(self,engine_path,max_batch_size=1,dtype=np.float32,model_height=1,model_width=1):
+        self.cfx = cuda.Device(0).make_context()
         self.engine_path = engine_path
         self.dtype = dtype
         self.logger = trt.Logger(trt.Logger.WARNING)
         self.runtime = trt.Runtime(self.logger)
         self.engine = self.load_engine(self.runtime, self.engine_path)
-        self.context = self.engine.create_execution_context()        
+        self.context = self.engine.create_execution_context()
         self.max_batch_size = max_batch_size
-        self.inputs, self.outputs, self.bindings, self.stream = self.allocate_buffers()
+        self.input_shape, self.output_shape, self.inputs, self.outputs, self.bindings, self.stream = self.allocate_buffers()
 
     @staticmethod
     def load_engine(trt_runtime, engine_path):
@@ -40,20 +41,25 @@ class TrtModel:
         inputs = []
         outputs = []
         bindings = []
+        input_shape, output_shape = [], []
         stream = cuda.Stream()
         for binding in self.engine:
             size = trt.volume(self.engine.get_binding_shape(binding)) * self.max_batch_size
+            shape = trt.Dims(self.engine.get_binding_shape(binding))
             host_mem_input = cuda.pagelocked_empty(size, np.float32)
             host_mem = cuda.pagelocked_empty(size, self.dtype)
             device_mem = cuda.mem_alloc(host_mem.nbytes)
             bindings.append(int(device_mem))
             if self.engine.binding_is_input(binding):
                 inputs.append(HostDeviceMem(host_mem_input, device_mem))
+                input_shape = shape
             else:
                 outputs.append(HostDeviceMem(host_mem, device_mem))
-        return inputs, outputs, bindings, stream
+                output_shape = shape
+        return input_shape, output_shape, inputs, outputs, bindings, stream
 
     def __call__(self,x:np.ndarray,batch_size=1):
+        self.cfx.push()
         x = x.astype(np.float32)
         np.copyto(self.inputs[0].host,x.ravel())
         for inp in self.inputs:
@@ -62,4 +68,5 @@ class TrtModel:
         for out in self.outputs:
             cuda.memcpy_dtoh_async(out.host, out.device, self.stream) 
         self.stream.synchronize()
+        self.cfx.pop()
         return [out.host.reshape(batch_size,-1) for out in self.outputs]

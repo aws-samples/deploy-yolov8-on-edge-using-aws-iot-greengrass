@@ -1,10 +1,14 @@
-from .greengrass_mqtt_ipc import GreengrassMqtt
-import threading, time, cv2, ultralytics, torch, numpy as np
+import threading, time, cv2, ultralytics, torch, numpy as np, json
 from datetime import datetime, timezone
 import onnxruntime as ort
-from src.tensorrt_utils import TrtModel
+from .greengrass_mqtt_ipc import GreengrassMqtt
+from .tensorrt_utils import TrtModel
+from .utils import IOUtils
+from .sort import Sort
 
 MODEL_HEIGHT, MODEL_WIDTH = 640, 640
+io_utuls = IOUtils(conf=0.3, iou=0.5, max_det=300, agnostic_nms=False, classes=None)
+mot_tracker = Sort(max_age=30, min_hits=15, iou_threshold=0.50)
 
 # Camera Class for starting/stopping a camera
 class Camera:
@@ -15,11 +19,13 @@ class Camera:
             self.camera_id = int(self.camera_id)
         self.cam = cv2.VideoCapture(self.camera_id)
     def get_frame(self):
-        if self.cam.isOpened(): return self.cam.read()[1]
+        if self.camera_status: return self.cam.read()[1]
         else: return None
     def stop_camera(self) -> None:
         self.cam.release()
     def camera_status(self):
+        if not self.cam.isOpened():
+            self.cam = cv2.VideoCapture(self.camera_id)
         return self.cam.isOpened()
 
 # Inference Class for setting up the inference model, running inference and generating outputs
@@ -33,32 +39,35 @@ class Inference:
         self.model = None
         self.fps = 0.0
         self.fps_arr = []
+        self.model_input_shape, self.model_output_shape = [], []
         if '.pt' in self.model_loc: # if PyTorch Model
             self.model_type = 'pytorch'
             self.model = ultralytics.YOLO(self.model_loc)
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             self.model.to(device)
+            self.model_input_shape = (1, 3, MODEL_HEIGHT, MODEL_WIDTH)
+            self.model_output_shape = (1, 84, 8400)
             print('[Inference] Success: Using YOLOv8 PyTorch model for inference...')
         elif '.onnx' in self.model_loc: # if ONNX Model
             self.model_type = 'onnx'
             self.model = ort.InferenceSession(self.model_loc)
+            self.model_input_shape = self.model.get_inputs()[0].shape
+            self.model_output_shape = self.model.get_outputs()[0].shape
             print('[Inference] Success: Using YOLOv8 ONNX model for inference...')
         elif '.trt' in self.model_loc: # if TensorRT Model
             self.model_type = 'tensorrt'
             self.model = TrtModel(engine_path=self.model_loc, model_height=MODEL_HEIGHT, model_width=MODEL_WIDTH)
+            self.model_input_shape = self.model.input_shape
+            self.model_output_shape = self.model.output_shape
             print('[Inference] Success: Using YOLOv8 TensorRT model for inference...')
         else:
             print('[Inference] Error: No valid model was provided')
         
+        print(f'Model Input Shape  = {self.model_input_shape}')
+        print(f'Model Output Shape = {self.model_output_shape}')
+        
         self.inference_thread = threading.Thread(target = self.infer)
         self.inference_thread.start()
-
-    def preprocess_input(self, x, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], input_space="RGB", input_range=None, **kwargs):
-        if input_space == "BGR": x = x[..., ::-1].copy()
-        if input_range is not None and (x.max() > 1 and input_range[1] == 1): x = x / 255.0
-        if mean is not None: x = x - np.array(mean)
-        if std is not None: x = x / np.array(std)
-        return x
     
     def start(self):
         self.is_start = True
@@ -94,13 +103,19 @@ class Inference:
                     with torch.no_grad():
                         out_results = self.model.predict(source = image)
                 elif self.model_type == 'onnx':
+                    image = io_utuls.preprocess(image, input_range=[0, 1])
                     image = image.transpose([2,0,1])
                     image = image[np.newaxis, ...]
                     out_results = self.model.run(None, {'images': image.astype(np.float32)})[0]
+                    out_results = torch.from_numpy(np.array(out_results).reshape(self.model_output_shape)).cpu()
+                    out_results = io_utuls.postprocess(out_results, self.model_input_shape, image_in.shape)
                 elif self.model_type == 'tensorrt':
+                    image = io_utuls.preprocess(image, input_range=[0, 1])
                     image = image.transpose([2,0,1])
                     image = image[np.newaxis, ...]
                     out_results = self.model(image.astype(np.float32))[0]
+                    out_results = torch.from_numpy(np.array(out_results).reshape(self.model_output_shape)).cpu()
+                    out_results = io_utuls.postprocess(out_results, self.model_input_shape, image_in.shape)
                 
                 infer_end_time = time.time()
 
@@ -115,28 +130,40 @@ class Inference:
                 message['FPS'] = self.fps
                 message['Model Format'] = self.model_type.upper()
 
+                trackers = []
+
                 if out_results is not None and self.model_type == 'pytorch':
                     for result in out_results:
                         if len(result)==0: continue
                         if result.boxes:
                             message['Model Type'] = 'Object Detection'
-                            # message['Inference Output'] = result.boxes.numpy().data.tolist()
+                            message['Inference Output'] = result.boxes.numpy().data.tolist()
                         elif result.masks:
                             message['Model Type'] = 'Segmentation'
-                            # message['Inference Output'] = result.masks.numpy().data.tolist()
+                            message['Inference Output'] = result.masks.numpy().data.tolist()
                         elif result.preds:
                             message['Model Type'] = 'Classification'
-                            # message['Inference Output'] = result.preds.numpy().data.tolist()
+                            message['Inference Output'] = result.preds.numpy().tolist()
+                        if len(result)>0:
+                            trackers = mot_tracker.update(result)
+                        message['Tracking'] = trackers
                 elif out_results is not None and self.model_type == 'onnx':
                     for result in out_results:
                         message['Model Type'] = 'Object Detection'
-                        # message['Inference Output'] = result.tolist()
+                        message['Inference Output'] = result
+                        if len(result)>0:
+                            trackers = mot_tracker.update(result)
+                        message['Tracking'] = trackers
                 elif out_results is not None and self.model_type == 'tensorrt':
                     for result in out_results:
                         message['Model Type'] = 'Object Detection'
-                        # message['Inference Output'] = result.tolist()
+                        message['Inference Output'] = result
+                        if len(result)>0:
+                            trackers = mot_tracker.update(result)
+                        message['Tracking'] = trackers
                 
-                message['Inference Output'] = "TBD"
+                if len(message['Inference Output'])>1000:
+                    message['Inference Output'] = "TBD"
 
                 try:
                     self.client.publish_message(message)
