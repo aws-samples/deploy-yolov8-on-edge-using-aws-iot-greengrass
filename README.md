@@ -25,15 +25,20 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
     - It would prompt for providing name of `IoT Thing` & `IoT Thing Group` and if not entered, would take default values.
     - Once completed, the `IoT Thing` and its `IoT Thing Group` would be available on the AWS Console.
 
-### (2) How to build/publish/deploy component on the Edge Device?
-1. Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `com.aws.yolov8.inference/deploy-gdk-config.sh` as follows:
+### (2) How to build/publish/deploy component on the Edge Device from a Personal Laptop or EC2 Instance?
+1. Get started with cloning the repository on a Personal Laptop / EC2 Instance which is Configured to AWS as follows:
+    ```
+    [On Personal Laptop / EC2 Instance - Configured to AWS]
+    $ git clone https://github.com/aws-samples/deploy-yolov8-on-edge-using-aws-iot-greengrass
+    ```
+2. Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `com.aws.yolov8.inference/deploy-gdk-config.sh` as follows:
     ```
     AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
     AWS_REGION="ADD_REGION"
     DEV_IOT_THING="NAME_OF_OF_THING"
     DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
     ```
-2. Download YOLOv8 models on the Edge Device. Convert the models to ONNX and TensorRT if required:
+3. Download YOLOv8 models on the Edge Device. Convert the models to ONNX and TensorRT if required:
     - There is a suite of models to select from:
         - Detection (yolov8n.pt, yolov8m.pt, yolov8l.pt, yolov8s.pt, yolov8x.pt)
         - Segmentation (yolov8n-seg.pt, yolov8m-seg.pt, yolov8l-seg.pt, yolov8s-seg.pt, yolov8x-seg.pt)
@@ -53,7 +58,7 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
         $ alias trtexec="/usr/src/tensorrt/bin/trtexec"
         $ trtexec --onnx={edge/device/path/to/models}/yolov8n.onnx --saveEngine={edge/device/path/to/models}/yolov8n.trt
         ```
-3. Edit the right model location and the camera to be used in the `com.aws.yolov8.inference/greengrass/recipe.json` as follows:
+4. Edit the right model location and the camera to be used in the `com.aws.yolov8.inference/greengrass/recipe.json` as follows:
     ```
     "Configuration": 
     {
@@ -63,14 +68,14 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
         "model_loc": "{edge/device/path/to/models}/yolov8n.trt" OR "{edge/device/path/to/models}/yolov8n.onnx" OR "{edge/device/path/to/models}/yolov8n.pt"
     }
     ```
-4. Build/Publish/Deploy the component as follows:
+5. Build/Publish/Deploy the component as follows:
     ```
     [On Personal Laptop / EC2 Instance - Configured to AWS]
     $ cd com.aws.yolov8.inference/
     $ chmod u+x deploy-gdk-build.sh
     $ ./deploy-gdk-build.sh
     ```
-5. After a few seconds, the component will be published to the AWS Account and will be deployed in the designated Edge device.
+6. After a few seconds, the component will be published to the AWS Account and will be deployed in the designated Edge device.
 
 ### (3) How to run inference and obtain output?
 ![MQTTTestClient](assets/MQTTTestClient.png)
