@@ -12,7 +12,7 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
 
 ### (1) How to Setup Edge Device with IoT Greengrass V2?
 - Use the [Blog](https://aws.amazon.com/blogs/iot/using-aws-iot-greengrass-version-2-with-amazon-sagemaker-neo-and-nvidia-deepstream-applications/) to provision an edge device like NVIDIA Jetson with IoT Greengrass V2. 
-- Alternatively, you can use the following script:
+- Alternatively, you can use the following script and run in the Edge Device:
     ```
     $ cd com.aws.yolov8.inference/
     $ chmod u+x provisioning.sh
@@ -21,10 +21,10 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
     - The `provisioning.sh` script only works for Ubuntu based system.
     - It would prompt for AWS Credentials which can be bypassed if already configured by clicking Enter.
     - It would prompt for providing name of `IoT Thing` & `IoT Thing Group` and if not entered, would take default values.
-    - Once completed, the IoT Thing and its Group would be available on the AWS Console.
+    - Once completed, the `IoT Thing` and its `IoT Thing Group` would be available on the AWS Console.
 
 ### (2) How to build/publish/deploy component on the Edge Device?
-1. Edit the details of the AWS Account, IoT Thing and IoT Thing Group in the `com.aws.yolov8.inference/deploy-gdk-config.sh` as follows:
+1. Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `com.aws.yolov8.inference/deploy-gdk-config.sh` as follows:
     ```
     AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
     AWS_REGION="ADD_REGION"
