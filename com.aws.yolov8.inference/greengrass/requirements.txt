@@ -7,3 +7,4 @@ onnxruntime==1.14.0
 ultralytics
 tensorrt
 pycuda
+filterpy
