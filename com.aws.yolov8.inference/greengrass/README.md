@@ -8,8 +8,8 @@
     "Configuration": {
         "event_topic": "inference/input",
         "output_topic": "inference/output",
-        "camera_id": "0",
-        "model_loc": "models/yolov8n.trt"
+        "camera_id": "0", OR "samples/video.mp4",
+        "model_loc": "models/yolov8n.trt" OR "models/yolov8n.onnx" OR "models/yolov8n.pt"
     }
 ```
 - Once the component is built, published and a deployment is run on the edge device, the ML model can be managed using MQTT Test Client.
