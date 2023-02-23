@@ -14,7 +14,9 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
 - Use the [Blog](https://aws.amazon.com/blogs/iot/using-aws-iot-greengrass-version-2-with-amazon-sagemaker-neo-and-nvidia-deepstream-applications/) to provision an edge device like NVIDIA Jetson with IoT Greengrass V2. 
 - Alternatively, you can use the following script and run in the Edge Device:
     ```
-    $ cd com.aws.yolov8.inference/
+    [On Edge Device]
+    $ git clone https://github.com/aws-samples/deploy-yolov8-on-edge-using-aws-iot-greengrass
+    $ cd deploy-yolov8-on-edge-using-aws-iot-greengrass/com.aws.yolov8.inference/
     $ chmod u+x provisioning.sh
     $ ./provisioning.sh
     ```
@@ -31,34 +33,39 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
     DEV_IOT_THING="NAME_OF_OF_THING"
     DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
     ```
-2. Upload the required models in the `com.aws.yolov8.inference/greengrass/models` directory. In order to run TensorRT models, it is advisable to convert the ONNX models to TensorRT models using the following methods directly on the Edge Device:
-    ```
-    $ apt-get install tensorrt
-    $ alias trtexec="/usr/src/tensorrt/bin/trtexec"
-    $ trtexec --onnx=com.aws.yolov8.inference/greengrass/models/yolov8n.onnx --saveEngine=com.aws.yolov8.inference/greengrass/models/yolov8n.trt
-    ```
+2. Download YOLOv8 models on the Edge Device. Convert the models to ONNX and TensorRT if required:
     - There is a suite of models to select from:
         - Detection (yolov8n.pt, yolov8m.pt, yolov8l.pt, yolov8s.pt, yolov8x.pt)
         - Segmentation (yolov8n-seg.pt, yolov8m-seg.pt, yolov8l-seg.pt, yolov8s-seg.pt, yolov8x-seg.pt)
-        - Classification (yolov8n-cls.pt, yolov8m-cls.pt, yolov8l-cls.pt, yolov8s-cls.pt, yolov8x-cls.pt)
+        - Classification (yolov8n-cls.pt, yolov8m-cls.pt, yolov8l-cls.pt, yolov8s-cls.pt, yolov8x-cls.pt)    
     - Download the PyTorch models as follows and also convert into ONNX:
         ```
+        [On Edge Device]
         $ pip3 install ultralytics
-        $ cd com.aws.yolov8.inference/greengrass/models/
-        $ yolo export model=yolov8n.pt/yolov8n-seg.pt/yolov8n-cls.pt
-        $ yolo export model=yolov8n.pt/yolov8n-seg.pt/yolov8n-cls.pt format=onnx
+        $ cd {edge/device/path/to/models}
+        $ yolo export model=yolov8n.pt OR yolov8n-seg.pt OR yolov8n-cls.pt
+        $ yolo export model=yolov8n.pt OR yolov8n-seg.pt OR yolov8n-cls.pt format=onnx
+        ```
+    - In order to run TensorRT models, it is advisable to convert the ONNX models to TensorRT models using the following methods directly on the Edge Device:
+        ```
+        [On NVIDIA based Edge Device]
+        $ apt-get install tensorrt
+        $ alias trtexec="/usr/src/tensorrt/bin/trtexec"
+        $ trtexec --onnx={edge/device/path/to/models}/yolov8n.onnx --saveEngine={edge/device/path/to/models}/yolov8n.trt
         ```
 3. Edit the right model location and the camera to be used in the `com.aws.yolov8.inference/greengrass/recipe.json` as follows:
     ```
-    "Configuration": {
+    "Configuration": 
+    {
         "event_topic": "inference/input",
         "output_topic": "inference/output",
-        "camera_id": "0",
-        "model_loc": "models/yolov8n.pt" OR "models/yolov8n.onnx" OR "models/yolov8n.trt"
+        "camera_id": "0", OR "samples/video.mp4",
+        "model_loc": "{edge/device/path/to/models}/yolov8n.trt" OR "{edge/device/path/to/models}/yolov8n.onnx" OR "{edge/device/path/to/models}/yolov8n.pt"
     }
     ```
 4. Build/Publish/Deploy the component as follows:
     ```
+    [On Personal Laptop / EC2 Instance - Configured to AWS]
     $ cd com.aws.yolov8.inference/
     $ chmod u+x deploy-gdk-build.sh
     $ ./deploy-gdk-build.sh
@@ -99,6 +106,7 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
     ```
 - Run the code as follows to cleanup:
     ```
+    [On Personal Laptop / EC2 Instance - Configured to AWS]
     $ cd com.aws.yolov8.inference/
     $ python3 cleanup_gg.py
     ```

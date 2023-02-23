@@ -3,13 +3,14 @@
 ---
 
 ## com.aws.yolov8.inference
-- This component is used to run YOLOv8 on an edge device. The inference component runs the models stored in the `greengrass/models` directory. Whichever model and camera needs to be run has to be identified in the `greengrass/recipe.json` file. The following shows an example of the `camera_id` and `model_loc` inside the `greengrass/recipe.json` file:
+- This component is used to run YOLOv8 on an edge device. Whichever model and camera needs to be run has to be identified in the `greengrass/recipe.json` file. The following shows an example of the `camera_id` and `model_loc` inside the `greengrass/recipe.json` file:
 ```
-    "Configuration": {
+    "Configuration": 
+    {
         "event_topic": "inference/input",
         "output_topic": "inference/output",
         "camera_id": "0", OR "samples/video.mp4",
-        "model_loc": "models/yolov8n.trt" OR "models/yolov8n.onnx" OR "models/yolov8n.pt"
+        "model_loc": "{edge/device/path/to/models}/yolov8n.trt" OR "{edge/device/path/to/models}/yolov8n.onnx" OR "{edge/device/path/to/models}/yolov8n.pt"
     }
 ```
 - Once the component is built, published and a deployment is run on the edge device, the ML model can be managed using MQTT Test Client.
