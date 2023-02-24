@@ -35,14 +35,21 @@ class IOUtils:
         results = results[0]
         results = results[results[:,1] != results[:,3]]
         results = results[results[:,0] != results[:,2]]
-        results = classes2names(results)
-        return results
+        return [results.tolist()]
 
 def classes2names(results):
-    results = results.tolist()
     for result in results:
         result[-1] = classes_names[str(int(result[-1]))]
-    return [results]
+    return results
+
+def classescount(results):
+    res = {}
+    for result in results:
+        if result[-1] not in res:
+            res[result[-1]] = 1
+        else:
+            res[result[-1]] += 1
+    return res
 
 def scale_boxes(img1_shape, boxes, img0_shape, ratio_pad=None):
     """

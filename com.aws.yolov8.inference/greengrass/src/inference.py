@@ -3,12 +3,10 @@ from datetime import datetime, timezone
 import onnxruntime as ort
 from .greengrass_mqtt_ipc import GreengrassMqtt
 from .tensorrt_utils import TrtModel
-from .utils import IOUtils
-from .sort import Sort
+from .utils import IOUtils, classes2names, classescount
 
 MODEL_HEIGHT, MODEL_WIDTH = 640, 640
 io_utuls = IOUtils(conf=0.3, iou=0.5, max_det=300, agnostic_nms=False, classes=None)
-mot_tracker = Sort(max_age=30, min_hits=15, iou_threshold=0.50)
 
 # Camera Class for starting/stopping a camera
 class Camera:
@@ -125,50 +123,46 @@ class Inference:
                 self.fps = round(np.mean(self.fps_arr),2)
                 
                 message = {}
-                message['UTC Time'] = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
-                message['Inferene Time (s)'] = infer_end_time - infer_start_time
+                message['UTCTime'] = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')
+                message['InferenceTime'] = infer_end_time - infer_start_time
                 message['FPS'] = self.fps
-                message['Model Format'] = self.model_type.upper()
+                message['ModelFormat'] = self.model_type.upper()
 
-                trackers = []
-
+                InferenceClasses = []
                 if out_results is not None and self.model_type == 'pytorch':
                     for result in out_results:
                         if len(result)==0: continue
                         if result.boxes:
-                            message['Model Type'] = 'Object Detection'
-                            message['Inference Output'] = result.boxes.numpy().data.tolist()
+                            message['ModelType'] = 'Object Detection'
+                            message['InferenceOutput'] = result.boxes.numpy().data.tolist()
+                            InferenceClasses = classescount(classes2names(message['InferenceOutput']))
                         elif result.masks:
-                            message['Model Type'] = 'Segmentation'
-                            message['Inference Output'] = result.masks.numpy().data.tolist()
+                            message['ModelType'] = 'Segmentation'
+                            message['InferenceOutput'] = result.masks.numpy().data.tolist()
                         elif result.preds:
-                            message['Model Type'] = 'Classification'
-                            message['Inference Output'] = result.preds.numpy().tolist()
-                        if len(result)>0:
-                            trackers = mot_tracker.update(result)
-                        message['Tracking'] = trackers
+                            message['ModelType'] = 'Classification'
+                            message['InferenceOutput'] = result.preds.numpy().tolist()
                 elif out_results is not None and self.model_type == 'onnx':
                     for result in out_results:
-                        message['Model Type'] = 'Object Detection'
-                        message['Inference Output'] = result
-                        if len(result)>0:
-                            trackers = mot_tracker.update(result)
-                        message['Tracking'] = trackers
+                        message['ModelType'] = 'Object Detection'
+                        message['InferenceOutput'] = result
+                        InferenceClasses = classescount(classes2names(result))
                 elif out_results is not None and self.model_type == 'tensorrt':
                     for result in out_results:
-                        message['Model Type'] = 'Object Detection'
-                        message['Inference Output'] = result
-                        if len(result)>0:
-                            trackers = mot_tracker.update(result)
-                        message['Tracking'] = trackers
+                        message['ModelType'] = 'Object Detection'
+                        message['InferenceOutput'] = result
+                        InferenceClasses = classescount(classes2names(result))
                 
-                if len(message['Inference Output'])>1000:
-                    message['Inference Output'] = "TBD"
+                for cls in InferenceClasses:
+                    message['CLASS_' + cls] = InferenceClasses[cls]
+                
+                if len(message['InferenceOutput'])>1000:
+                    message['InferenceOutput'] = "TBD"
 
                 try:
                     self.client.publish_message(message)
                 except Exception as e:
                     print(f"[Inference] MQTT Exception: {str(e)}")
                     if 'AWS_ERROR_EVENT_STREAM_MESSAGE_FIELD_SIZE_EXCEEDED' in str(e):
-                        message['Inference Output'] = 'TOO LARGE'
+                        message['InferenceOutput'] = 'TOO LARGE'
                         self.client.publish_message(message)
