@@ -26,7 +26,7 @@ function get_os_details()
         exit
     fi
 
-    if [ "$OS_ARCH" != "ubuntu" ]; then
+    if [ "$OS_ID" != "ubuntu" ]; then
         echo "Currently only works for Ubuntu. Exiting."
         exit
     fi
@@ -37,8 +37,8 @@ function get_os_details()
 # Function to install packages
 function install_packages()
 {
-    apt update -y    
-    apt install -y git zip unzip build-essential wget curl libpng-dev autoconf libtool pkg-config libcurl4-openssl-dev libssl-dev uuid-dev zlib1g-dev libpulse-dev software-properties-common coreutils
+    sudo apt update -y    
+    sudo apt install -y git zip unzip build-essential wget curl libpng-dev autoconf libtool pkg-config libcurl4-openssl-dev libssl-dev uuid-dev zlib1g-dev libpulse-dev software-properties-common coreutils
     
     if ! [ -x "$(command -v aws)" ]; then
         echo "AWS is NOT installed. Trying to Install."
@@ -65,10 +65,9 @@ function install_packages()
     if [ $OS_ARCH == "aarch64" ]; then
         wget https://corretto.aws/downloads/latest/amazon-corretto-11-aarch64-linux-jdk.deb
         sudo dpkg --install amazon-corretto-11-aarch64-linux-jdk.deb 
-        java -v
+        rm -rf amazon-corretto-11-aarch64-linux-jdk.deb
     elif [ $OS_ARCH == "x86_64" ]; then
         sudo apt install default-jdk
-        java -v
     else
         echo "ARM64 or X86_64 system is not identified. Exiting."
         exit
@@ -99,11 +98,12 @@ function provision_device()
 
     cd
     mkdir -p greengrass_files
-    pushd temp
+    pushd greengrass_files
     curl -s https://d2s8p88vqu9w66.cloudfront.net/releases/greengrass-nucleus-latest.zip > greengrass-nucleus-latest.zip
-    unzip greengrass-nucleus-latest.zip -d GreengrassInstaller && rm greengrass-nucleus-latest.zip
+    unzip -o greengrass-nucleus-latest.zip -d GreengrassInstaller && rm greengrass-nucleus-latest.zip
     sudo -E java -Droot="/greengrass/v2" -Dlog.store=FILE -jar ./GreengrassInstaller/lib/Greengrass.jar --aws-region us-east-1 --thing-name $IOT_THING_NAME --thing-group-name $IOT_THING_GROUP --component-default-user ggc_user:ggc_group --provision true --setup-system-service true --deploy-dev-tools true --thing-policy-name GreengrassV2IoTThingPolicy --tes-role-name GreengrassV2TokenExchangeRole
     popd
+    rm -rf greengrass_files
 }
 
 # Main Function
