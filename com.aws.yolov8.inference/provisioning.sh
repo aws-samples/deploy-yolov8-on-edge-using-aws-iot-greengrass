@@ -38,7 +38,7 @@ function get_os_details()
 function install_packages()
 {
     sudo apt update -y    
-    sudo apt install -y git zip unzip build-essential wget curl libpng-dev autoconf libtool pkg-config libcurl4-openssl-dev libssl-dev uuid-dev zlib1g-dev libpulse-dev software-properties-common coreutils
+    sudo apt install -y git zip unzip build-essential wget curl libpng-dev autoconf libtool pkg-config libcurl4-openssl-dev libssl-dev uuid-dev zlib1g-dev libpulse-dev software-properties-common coreutils java-common
     
     if ! [ -x "$(command -v aws)" ]; then
         echo "AWS is NOT installed. Trying to Install."
@@ -47,7 +47,7 @@ function install_packages()
         elif [ $OS_ARCH == "x86_64" ]; then
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
         else
-            echo "ARM64 or X86_64 system is not identified. Exiting."
+            echo "ARM64 or x86_64 system is not identified. Exiting."
             exit
         fi
         unzip awscliv2.zip
