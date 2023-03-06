@@ -10,7 +10,8 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
 ## AWS Architecture:
 ![AWSArchitecture](assets/AWSArchitecture.png)
 
-### (1) How to Setup Edge Device with IoT Greengrass V2?
+## 1. Setup Edge Device:
+### (1.1) How to Setup Edge Device with IoT Greengrass V2?
 - Use the [Blog](https://aws.amazon.com/blogs/iot/using-aws-iot-greengrass-version-2-with-amazon-sagemaker-neo-and-nvidia-deepstream-applications/) to provision an edge device like NVIDIA Jetson with IoT Greengrass V2. 
 - Alternatively, you can use the following script and run in the Edge Device:
     ```
@@ -25,20 +26,8 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
     - It would prompt for providing name of `IoT Thing` & `IoT Thing Group` and if not entered, would take default values.
     - Once completed, the `IoT Thing` and its `IoT Thing Group` would be available on the AWS Console.
 
-### (2) How to build/publish/deploy component on the Edge Device from a Personal Laptop or EC2 Instance?
-1. Get started with cloning the repository on a Personal Laptop / EC2 Instance which is Configured to AWS as follows:
-    ```
-    [On Personal Laptop / EC2 Instance - Configured to AWS]
-    $ git clone https://github.com/aws-samples/deploy-yolov8-on-edge-using-aws-iot-greengrass
-    ```
-2. Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `com.aws.yolov8.inference/deploy-gdk-config.sh` as follows:
-    ```
-    AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
-    AWS_REGION="ADD_REGION"
-    DEV_IOT_THING="NAME_OF_OF_THING"
-    DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
-    ```
-3. Download YOLOv8 models on the Edge Device. Convert the models to ONNX and TensorRT if required:
+### (1.2) How to download/convert models on the Edge Device?
+- Download YOLOv8 models on the Edge Device. Convert the models to ONNX and TensorRT if required:
     - There is a suite of models to select from:
         - Detection (yolov8n.pt, yolov8m.pt, yolov8l.pt, yolov8s.pt, yolov8x.pt)
         - Segmentation (yolov8n-seg.pt, yolov8m-seg.pt, yolov8l-seg.pt, yolov8s-seg.pt, yolov8x-seg.pt)
@@ -47,25 +36,50 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
         ```
         [On Edge Device]
         $ pip3 install ultralytics
+        $ echo 'export PATH="/home/$USER/.local/bin:$PATH"' >> ~/.bashrc
+        $ source ~/.bashrc
         $ cd {edge/device/path/to/models}
+        
+        [FOR PYTORCH MODELS] 
         $ yolo export model=yolov8n.pt OR yolov8n-seg.pt OR yolov8n-cls.pt
+        
+        [FOR ONNX MODELS]
         $ yolo export model=yolov8n.pt OR yolov8n-seg.pt OR yolov8n-cls.pt format=onnx
         ```
     - In order to run TensorRT models, it is advisable to convert the ONNX models to TensorRT models using the following methods directly on the Edge Device:
         ```
         [On NVIDIA based Edge Device]
         $ apt-get install tensorrt
-        $ alias trtexec="/usr/src/tensorrt/bin/trtexec"
-        $ trtexec --onnx={edge/device/path/to/models}/yolov8n.onnx --saveEngine={edge/device/path/to/models}/yolov8n.trt
+        $ echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/targets/aarch64-linux/lib' >> ~/.bashrc
+        $ echo 'alias trtexec="/usr/src/tensorrt/bin/trtexec"' >> ~/.bashrc
+        $ source ~/.bashrc
+        $ trtexec --onnx={absolute/path/edge/device/path/to/models}/yolov8n.onnx --saveEngine={absolute/path/edge/device/path/to/models}/yolov8n.trt
         ```
-4. Edit the right model location and the camera to be used in the `com.aws.yolov8.inference/greengrass/recipe.json` as follows:
+
+## 2. Setup Personal Laptop / EC2 Instance:
+### (2.1) How to build/publish/deploy component on the Edge Device from a Personal Laptop or EC2 Instance?
+1. Get started with cloning the repository on a Personal Laptop / EC2 Instance which is Configured to AWS as follows:
+    ```
+    [On Personal Laptop / EC2 Instance - Configured to AWS]
+    $ git clone https://github.com/aws-samples/deploy-yolov8-on-edge-using-aws-iot-greengrass
+    ```
+2. Export the following variables in the Personal Laptop / EC2 Instance termina:
+Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `com.aws.yolov8.inference/deploy-gdk-config.sh` as follows:
+    ```
+    [On Personal Laptop / EC2 Instance - Configured to AWS]
+    export AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
+    export AWS_REGION="ADD_REGION"
+    export DEV_IOT_THING="NAME_OF_OF_THING"
+    export DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
+    ```
+3. Edit the right model location and the camera/local_video to be used in the `com.aws.yolov8.inference/greengrass/recipe.json` as follows:
     ```
     "Configuration": 
     {
         "event_topic": "inference/input",
         "output_topic": "inference/output",
         "camera_id": "0", OR "samples/video.mp4",
-        "model_loc": "{edge/device/path/to/models}/yolov8n.trt" OR "{edge/device/path/to/models}/yolov8n.onnx" OR "{edge/device/path/to/models}/yolov8n.pt"
+        "model_loc": "{absolute/path/edge/device/path/to/models}/yolov8n.trt" OR "{absolute/path/edge/device/path/to/models}/yolov8n.onnx" OR "{absolute/path/edge/device/path/to/models}/yolov8n.pt"
     }
     ```
 5. Build/Publish/Deploy the component as follows:
@@ -77,7 +91,7 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
     ```
 6. After a few seconds, the component will be published to the AWS Account and will be deployed in the designated Edge device.
 
-### (3) How to run inference and obtain output?
+### (2.2) How to run inference and obtain output?
 ![MQTTTestClient](assets/MQTTTestClient.png)
 1. From AWS Console, go to AWS IoT Core and select MQTT test client.
     a. Subscribe to the topic `inference/output`.
@@ -86,8 +100,7 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
 3. Select `start`, `pause` or `stop` for starting/pausing/stopping inference.
 4. Once the inference starts, you can see the output returning to the console.
 
-### (4) YOLOv8 Comparison on various NVIDIA Edge Devices:
-```
+### (2.3) YOLOv8 Comparison on various NVIDIA Edge Devices:
     |---------------------------|---------------------------------------|
     |           NVIDIA          |       **YOLOv8 Performance FPS**      |
     |            Edge           |---------------------------------------|
@@ -98,9 +111,8 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
     | **Orin AGX Seeed Studio** |             |          |              |
     | **Orin NX Seeed Studio**  |             |          |              |
     |---------------------------|-------------|----------|--------------|
-```
 
-### (5) Cleanup of the GG Components and Deployment
+### (2.4) Cleanup of the GG Components and Deployment
 - Use the `com.aws.yolov8.inference/cleanup_gg.py` to clean the Greengrass Components and Deployment. 
 - In the `com.aws.yolov8.inference/cleanup_gg.py`, change the following as per the AWS Account and IoT device details:
     ```
