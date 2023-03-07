@@ -82,6 +82,17 @@ Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `c
         "model_loc": "{absolute/path/edge/device/path/to/models}/yolov8n.trt" OR "{absolute/path/edge/device/path/to/models}/yolov8n.onnx" OR "{absolute/path/edge/device/path/to/models}/yolov8n.pt"
     }
     ```
+4. Install GDK for Greengrass Development:
+    ```
+    [On Personal Laptop / EC2 Instance - Configured to AWS]
+    $ python3 -m pip install -U git+https://github.com/aws-greengrass/aws-greengrass-gdk-cli.git@v1.2.0
+
+    [Install jq for Linux]
+    $ apt-get install jq
+
+    [Install jq for Linux]
+    $ brew install jq
+    ```
 5. Build/Publish/Deploy the component as follows:
     ```
     [On Personal Laptop / EC2 Instance - Configured to AWS]
