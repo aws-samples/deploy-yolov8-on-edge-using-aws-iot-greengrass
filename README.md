@@ -125,8 +125,8 @@ Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `c
 
 ### (2.3) YOLOv8 Comparison on various NVIDIA Edge Devices:
     ----------------------------------------------------------------------------------------------
-    |             |      NVIDIA      |        YOLOv8n (ms)         |      YOLOv8n-seg (ms)       |
-    |             |       Edge       |---------|--------|----------|---------|--------|----------|
+    |    Model    |      NVIDIA      |        YOLOv8n (ms)         |      YOLOv8n-seg (ms)       |
+    |    Input    |       Edge       |---------|--------|----------|---------|--------|----------|
     |   [H x W]   |      Device      | PyTorch |  ONNX  | TensorRT | PyTorch |  ONNX  | TensorRT |
     |-------------|------------------|---------|--------|----------|---------|--------|----------|
     | [640 x 640] |      Seeed       |  59.32  |  58.82 |   44.87  |  82.54  | 168.85 |  146.10  |
