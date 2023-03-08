@@ -33,6 +33,11 @@ class Inference:
         self.is_start, self.is_pause, self.is_stop = False, False, False
         self.client = client
         self.model_loc = config['model_loc']
+        if 'MODEL_HEIGHT' in config: self.MODEL_HEIGHT = config['MODEL_HEIGHT']
+        else: self.MODEL_HEIGHT = MODEL_HEIGHT
+        if 'MODEL_WIDTH' in config: self.MODEL_WIDTH = config['MODEL_WIDTH']
+        else: self.MODEL_WIDTH = MODEL_WIDTH
+
         self.model_type = None
         self.model = None
         self.fps = 0.0
@@ -43,18 +48,20 @@ class Inference:
             self.model = ultralytics.YOLO(self.model_loc)
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             self.model.to(device)
-            self.model_input_shape = (1, 3, MODEL_HEIGHT, MODEL_WIDTH)
-            self.model_output_shape = (1, 84, 8400)
+            self.model_input_shape = (1, 3, self.MODEL_HEIGHT, self.MODEL_WIDTH)
+            self.model_output_shape = (1, 84, int(8400*(self.MODEL_HEIGHT*self.MODEL_WIDTH)/(640*640)))
             print('[Inference] Success: Using YOLOv8 PyTorch model for inference...')
         elif '.onnx' in self.model_loc: # if ONNX Model
             self.model_type = 'onnx'
-            self.model = ort.InferenceSession(self.model_loc)
+            so = ort.SessionOptions()
+            so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+            self.model = ort.InferenceSession(self.model_loc, sess_options=so, providers=['CUDAExecutionProvider'])
             self.model_input_shape = self.model.get_inputs()[0].shape
             self.model_output_shape = self.model.get_outputs()[0].shape
             print('[Inference] Success: Using YOLOv8 ONNX model for inference...')
         elif '.trt' in self.model_loc: # if TensorRT Model
             self.model_type = 'tensorrt'
-            self.model = TrtModel(engine_path=self.model_loc, model_height=MODEL_HEIGHT, model_width=MODEL_WIDTH)
+            self.model = TrtModel(engine_path=self.model_loc, model_height=self.MODEL_HEIGHT, model_width=self.MODEL_WIDTH)
             self.model_input_shape = self.model.input_shape
             self.model_output_shape = self.model.output_shape
             print('[Inference] Success: Using YOLOv8 TensorRT model for inference...')
@@ -92,7 +99,7 @@ class Inference:
                 if image_in is None: continue
 
                 orig_image = cv2.cvtColor(image_in, cv2.COLOR_BGR2RGB)
-                image = cv2.resize(orig_image, (MODEL_HEIGHT, MODEL_WIDTH))
+                image = cv2.resize(orig_image, (self.MODEL_WIDTH, self.MODEL_HEIGHT))
                 out_results = None
 
                 infer_start_time = time.time()
@@ -111,7 +118,7 @@ class Inference:
                     image = io_utuls.preprocess(image, input_range=[0, 1])
                     image = image.transpose([2,0,1])
                     image = image[np.newaxis, ...]
-                    out_results = self.model(image.astype(np.float32))[0]
+                    out_results = self.model(image.astype(np.float32))[1]
                     out_results = torch.from_numpy(np.array(out_results).reshape(self.model_output_shape)).cpu()
                     out_results = io_utuls.postprocess(out_results, self.model_input_shape, image_in.shape)
                 
@@ -124,37 +131,48 @@ class Inference:
                 
                 message = {}
                 message['UTCTime'] = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')
-                message['InferenceTime'] = infer_end_time - infer_start_time
+                message['InferenceTime'] = (infer_end_time - infer_start_time)*1000.
                 message['FPS'] = self.fps
                 message['ModelFormat'] = self.model_type.upper()
 
                 InferenceClasses = []
+                message['InferenceOutput'] = "NONE"
                 if out_results is not None and self.model_type == 'pytorch':
                     for result in out_results:
                         if len(result)==0: continue
                         if result.boxes:
                             message['ModelType'] = 'Object Detection'
-                            message['InferenceOutput'] = result.boxes.numpy().data.tolist()
+                            if torch.cuda.is_available(): message['InferenceOutput'] = result.boxes.cpu().numpy().data.tolist()
+                            else: message['InferenceOutput'] = result.boxes.numpy().data.tolist()
                             InferenceClasses = classescount(classes2names(message['InferenceOutput']))
                         elif result.masks:
                             message['ModelType'] = 'Segmentation'
-                            message['InferenceOutput'] = result.masks.numpy().data.tolist()
+                            if torch.cuda.is_available(): message['InferenceOutput'] =  result.masks.cpu().numpy().data.tolist()
+                            else: message['InferenceOutput'] =  result.masks.numpy().data.tolist()
                         elif result.preds:
                             message['ModelType'] = 'Classification'
-                            message['InferenceOutput'] = result.preds.numpy().tolist()
+                            if torch.cuda.is_available(): message['InferenceOutput'] =  result.preds.cpu().numpy().tolist()
+                            else: message['InferenceOutput'] =  result.preds.numpy().tolist()
                 elif out_results is not None and self.model_type == 'onnx':
                     for result in out_results:
-                        message['ModelType'] = 'Object Detection'
-                        message['InferenceOutput'] = result
-                        InferenceClasses = classescount(classes2names(result))
+                        if len(self.model.get_outputs())>1:
+                            message['ModelType'] = 'Segmentation'
+                        else:
+                            message['ModelType'] = 'Object Detection'
+                            InferenceClasses = classescount(classes2names(result))
+                            message['InferenceOutput'] = result
                 elif out_results is not None and self.model_type == 'tensorrt':
                     for result in out_results:
-                        message['ModelType'] = 'Object Detection'
-                        message['InferenceOutput'] = result
-                        InferenceClasses = classescount(classes2names(result))
+                        if len(self.model.outputs)>1:
+                            message['ModelType'] = 'Segmentation'
+                        else:
+                            message['ModelType'] = 'Object Detection'
+                            InferenceClasses = classescount(classes2names(result))
+                            message['InferenceOutput'] = result
                 
-                for cls in InferenceClasses:
-                    message['CLASS_' + cls] = InferenceClasses[cls]
+                if message['ModelType'] == 'Object Detection':
+                    for cls in InferenceClasses:
+                        message['CLASS_' + cls] = InferenceClasses[cls]
                 
                 if len(message['InferenceOutput'])>1000:
                     message['InferenceOutput'] = "TBD"
