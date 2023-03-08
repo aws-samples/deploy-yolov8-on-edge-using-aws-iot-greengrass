@@ -10,7 +10,9 @@
         "event_topic": "inference/input",
         "output_topic": "inference/output",
         "camera_id": "0",
-        "model_loc": "models/yolov8n.trt"
+        "model_loc": "models/yolov8n.trt",
+        "MODEL_HEIGHT": 640,
+        "MODEL_WIDTH": 640
       },
       "accessControl": {
         "aws.greengrass.ipc.mqttproxy": {
