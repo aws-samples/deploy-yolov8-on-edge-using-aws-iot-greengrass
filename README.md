@@ -26,7 +26,15 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
     - It would prompt for providing name of `IoT Thing` & `IoT Thing Group` and if not entered, would take default values.
     - Once completed, the `IoT Thing` and its `IoT Thing Group` would be available on the AWS Console.
 
-### (1.2) How to download/convert models on the Edge Device?
+### (1.2) How to Install Dependencies?
+- Use the script `install_dependencies.sh` script on the Edge device to install the right dependencies.
+- Curently Seeed Studio J4012 comes with JetPack 5.0.2 and uses CUDA 11.4.
+    ```
+    $ chmod u+x install_dependencies.sh
+    $ ./install_dependencies.sh
+    ```
+
+### (1.3) How to download/convert models on the Edge Device?
 - Download YOLOv8 models on the Edge Device. Convert the models to ONNX and TensorRT if required:
     - There is a suite of models to select from:
         - Detection (yolov8n.pt, yolov8m.pt, yolov8l.pt, yolov8s.pt, yolov8x.pt)
@@ -40,11 +48,15 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
         $ source ~/.bashrc
         $ cd {edge/device/path/to/models}
         
-        [FOR PYTORCH MODELS] 
-        $ yolo export model=yolov8n.pt OR yolov8n-seg.pt OR yolov8n-cls.pt
+        [FOR PYTORCH MODELS]
+        $ MODEL_HEIGHT=480
+        $ MODEL_WIDTH=640
+        $ yolo export model=[yolov8n.pt OR yolov8n-seg.pt OR yolov8n-cls.pt] imgsz=$MODEL_HEIGHT,$MODEL_WIDTH
         
         [FOR ONNX MODELS]
-        $ yolo export model=yolov8n.pt OR yolov8n-seg.pt OR yolov8n-cls.pt format=onnx
+        $ MODEL_HEIGHT=480
+        $ MODEL_WIDTH=640
+        $ yolo export model=[yolov8n.pt OR yolov8n-seg.pt OR yolov8n-cls.pt] format=onnx imgsz=$MODEL_HEIGHT,$MODEL_WIDTH
         ```
     - In order to run TensorRT models, it is advisable to convert the ONNX models to TensorRT models using the following methods directly on the Edge Device:
         ```
@@ -112,16 +124,16 @@ Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `c
 4. Once the inference starts, you can see the output returning to the console.
 
 ### (2.3) YOLOv8 Comparison on various NVIDIA Edge Devices:
-    |---------------------------|---------------------------------------|
-    |           NVIDIA          |       **YOLOv8 Performance FPS**      |
-    |            Edge           |---------------------------------------|
-    |           Device          | **PyTorch** | **ONNX** | **TensorRT** |
-    |---------------------------|-------------|----------|--------------|
-    | **Orin AGX Devkit**       |     5.6     |   17.8   |     27.5     |
-    | **Xavier AGX Devkit**     |     4.5     |   12.4   |     22.7     |
-    | **Orin AGX Seeed Studio** |             |          |              |
-    | **Orin NX Seeed Studio**  |             |          |              |
-    |---------------------------|-------------|----------|--------------|
+    ---------------------------------------------------------------------------------------------
+    |    Model    |      NVIDIA     |      **YOLOv8n (ms)**       |    **YOLOv8n-seg (ms)**     |
+    | Input Size  |       Edge      |-----------------------------|-----------------------------|
+    |   [H x W]   |      Device     | PyTorch |  ONNX  | TensorRT | PyTorch |  ONNX  | TensorRT |
+    |-------------|-----------------|---------|--------|----------|---------|--------|----------|
+    | [640 x 640] |    **Seeed**    |  59.32  |  58.82 |   44.87  |  82.54  | 168.85 |  146.10  |
+    | [480 x 640] |    **Studio**   |  46.31  |  48.27 |   38.46  |  65.99  | 121.29 |  103.27  |
+    | [320 x 320] |    **J4012**    |  62.14  |  24.46 |   20.75  |  87.26  |  35.12 |   32.37  |
+    | [224 x 224] |                 |  61.68  |  18.58 |   13.84  |  84.03  |  23.64 |   18.51  |
+    ---------------------------------------------------------------------------------------------
 
 ### (2.4) Cleanup of the GG Components and Deployment
 - Use the `com.aws.yolov8.inference/cleanup_gg.py` to clean the Greengrass Components and Deployment. 
@@ -138,6 +150,11 @@ Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `c
     $ cd com.aws.yolov8.inference/
     $ python3 cleanup_gg.py
     ```
+
+## References:
+- Build Torch with CUDA support from source using this [link](https://github.com/pytorch/pytorch) or this [link](https://docs.nvidia.com/deeplearning/frameworks/install-pytorch-jetson-platform/index.html).
+- Build TorchVision with CUDA from source support using this [link](https://github.com/pytorch/vision).
+- Build ONNXRUNTIME with CUDA from source support using this [link](https://onnxruntime.ai/docs/build/eps.html).
 
 ## Contributors:
 - [Romil Shah (@rpshah)](rpshah@amazon.com)
