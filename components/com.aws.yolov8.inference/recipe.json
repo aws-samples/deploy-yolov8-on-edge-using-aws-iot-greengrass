@@ -4,6 +4,12 @@
   "ComponentVersion": "{COMPONENT_VERSION}",
   "ComponentDescription": "YOLOv8 Inference Component",
   "ComponentPublisher": "AWS Samples",
+  "ComponentDependencies":{
+    "com.aws.yolov8.modules": {
+      "VersionRequirement": ">0.0.0",
+      "DependencyType": "HARD"
+    }
+  },
   "ComponentConfiguration": {
     "DefaultConfiguration": {
       "Configuration": {
@@ -40,18 +46,8 @@
         }
       ],
       "Lifecycle": {
-        "Install": {
-          "Script": "python3 -m pip install -r {artifacts:decompressedPath}/greengrass/requirements.txt",
-          "RequiresPrivilege": "true"
-        },
         "Run": {
-          "Script": "python3 -u {artifacts:decompressedPath}/greengrass/main.py --config '''{configuration:/Configuration}'''",
-          "RequiresPrivilege": "true",
-          "Timeout": 1200
-        },
-        "Shutdown": {
-          "Script": "echo \"INFERENCE CODE SHUTTING DOWN\"",
-          "RequiresPrivilege": "true"
+          "Script": ". {com.aws.yolov8.modules:work:path}/venv/bin/activate\npython3 -u {artifacts:decompressedPath}/greengrass/main.py --config '''{configuration:/Configuration}'''"
         }
       }
     }

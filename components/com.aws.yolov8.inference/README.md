@@ -3,9 +3,9 @@
 ---
 
 ## com.aws.yolov8.inference
-- This component is used to run YOLOv8 on an edge device. Whichever model and camera needs to be run has to be identified in the `greengrass/recipe.json` file. The following shows an example of the `camera_id` and `model_loc` inside the `greengrass/recipe.json` file:
+- This component is used to run YOLOv8 on an edge device. Whichever model and camera needs to be run has to be identified in the `recipe.json` file. The following shows an example of the `camera_id` and `model_loc` inside the `recipe.json` file:
 ```
-    "Configuration": 
+    "Configuration":
     {
         "event_topic": "inference/input",
         "output_topic": "inference/output",
@@ -19,4 +19,4 @@
 - Once the inference is started, the inference results will start showing messages on the published topics.
 
 The MQTT Messages Subscription/Publishing are as follows:
-![MQTTMessages](../assets/MQTTMessages.png)
+![MQTTMessages](../../assets/MQTTMessages.png)
