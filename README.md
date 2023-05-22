@@ -11,7 +11,15 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
 ![AWSArchitecture](assets/AWSArchitecture.png)
 
 ## 1. Setup Edge Device:
-### (1.1) How to Setup Edge Device with IoT Greengrass V2?
+### (1.1) How to Install Dependencies?
+- Use the script `install_dependencies.sh` script on the Edge device to install the right dependencies.
+- Curently Seeed Studio J4012 comes with JetPack 5.0.2 and uses CUDA 11.4.
+    ```
+    $ chmod u+x install_dependencies.sh
+    $ ./install_dependencies.sh
+    ```
+
+### (1.2) How to Setup Edge Device with IoT Greengrass V2?
 - Use the [Blog](https://aws.amazon.com/blogs/iot/using-aws-iot-greengrass-version-2-with-amazon-sagemaker-neo-and-nvidia-deepstream-applications/) to provision an edge device like NVIDIA Jetson with IoT Greengrass V2.
 - Alternatively, you can use the following script and run in the Edge Device:
     ```
@@ -25,14 +33,6 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
     - It would prompt for AWS Credentials which can be bypassed if already configured by clicking Enter.
     - It would prompt for providing name of `IoT Thing` & `IoT Thing Group` and if not entered, would take default values.
     - Once completed, the `IoT Thing` and its `IoT Thing Group` would be available on the AWS Console.
-
-### (1.2) How to Install Dependencies?
-- Use the script `install_dependencies.sh` script on the Edge device to install the right dependencies.
-- Curently Seeed Studio J4012 comes with JetPack 5.0.2 and uses CUDA 11.4.
-    ```
-    $ chmod u+x install_dependencies.sh
-    $ ./install_dependencies.sh
-    ```
 
 ### (1.3) How to download/convert models on the Edge Device?
 - Download YOLOv8 models on the Edge Device. Convert the models to ONNX and TensorRT if required:
