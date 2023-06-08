@@ -4,12 +4,6 @@
   "ComponentVersion": "{COMPONENT_VERSION}",
   "ComponentDescription": "YOLOv8 Inference Component",
   "ComponentPublisher": "AWS Samples",
-  "ComponentDependencies":{
-    "com.aws.yolov8.modules": {
-      "VersionRequirement": ">0.0.0",
-      "DependencyType": "HARD"
-    }
-  },
   "ComponentConfiguration": {
     "DefaultConfiguration": {
       "Configuration": {
