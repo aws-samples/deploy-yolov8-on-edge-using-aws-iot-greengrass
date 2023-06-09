@@ -1,11 +1,11 @@
-AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
-AWS_REGION="ADD_REGION"
-DEV_IOT_THING="NAME_OF_OF_THING"
-DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
-
 DEV_IOT_COMPONENT="com.aws.yolov8.inference"
 
-import boto3
+import boto3, os
+
+AWS_ACCOUNT_NUM=os.environ["AWS_ACCOUNT_NUM"]
+AWS_REGION=os.environ["AWS_REGION"]
+DEV_IOT_THING=os.environ["DEV_IOT_THING"]
+DEV_IOT_THING_GROUP=os.environ["DEV_IOT_THING_GROUP"]
 
 gg_client = boto3.client('greengrassv2')
 
