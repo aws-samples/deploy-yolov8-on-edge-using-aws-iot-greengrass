@@ -9,8 +9,8 @@
       "Configuration": {
         "event_topic": "inference/input",
         "output_topic": "inference/output",
-        "camera_id": "/home/kcsong/Pictures/990320_640.mov",
-        "model_loc": "/home/kcsong/deploy-yolov8-on-edge-using-aws-iot-greengrass/all_models/yolov8n-seg_640x640.trt",
+        "camera_id": "0",
+        "model_loc": "models/yolov8n.trt",
         "MODEL_HEIGHT": 640,
         "MODEL_WIDTH": 640
       },
