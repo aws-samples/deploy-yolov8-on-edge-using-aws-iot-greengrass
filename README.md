@@ -76,7 +76,6 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
     $ git clone https://github.com/aws-samples/deploy-yolov8-on-edge-using-aws-iot-greengrass
     ```
 2. Export the following variables in the Personal Laptop / EC2 Instance terminal:
-Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `com.aws.yolov8.inference/deploy-gdk-config.sh` as follows:
     ```
     [On Personal Laptop / EC2 Instance - Configured to AWS]
     export AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
@@ -136,18 +135,19 @@ Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `c
     ------------------------------------------------------------------------------
 
 ### (2.4) Cleanup of the GG Components and Deployment
-- Use the `com.aws.yolov8.inference/cleanup_gg.py` to clean the Greengrass Components and Deployment.
-- In the `com.aws.yolov8.inference/cleanup_gg.py`, change the following as per the AWS Account and IoT device details:
+- Use the `utils/cleanup_gg.py` to clean the Greengrass Components and Deployment.
+- Export the following variables in the Personal Laptop / EC2 Instance terminal:
     ```
-    AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
-    AWS_REGION="ADD_REGION"
-    DEV_IOT_THING="NAME_OF_OF_THING"
-    DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
+    [On Personal Laptop / EC2 Instance - Configured to AWS]
+    export AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
+    export AWS_REGION="ADD_REGION"
+    export DEV_IOT_THING="NAME_OF_OF_THING"
+    export DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
     ```
 - Run the code as follows to cleanup:
     ```
     [On Personal Laptop / EC2 Instance - Configured to AWS]
-    $ cd com.aws.yolov8.inference/
+    $ cd utils/
     $ python3 cleanup_gg.py
     ```
 
