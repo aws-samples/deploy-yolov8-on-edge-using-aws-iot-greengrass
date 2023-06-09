@@ -2,13 +2,13 @@
   "component": {
     "com.aws.yolov8.inference": {
       "author": "AWS Samples for YOLOv8",
-      "version": "0.0.0",
+      "version": "0.1.44",
       "build": {
         "build_system": "zip"
       },
       "publish": {
         "bucket": "ggv2artifacts",
-        "region": "AWS_REGION"
+        "region": "us-east-1"
       }
     }
   },

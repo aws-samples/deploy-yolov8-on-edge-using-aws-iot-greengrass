@@ -67,13 +67,13 @@ class Inference:
             print('[Inference] Success: Using YOLOv8 TensorRT model for inference...')
         else:
             print('[Inference] Error: No valid model was provided')
-        
+
         print(f'Model Input Shape  = {self.model_input_shape}')
         print(f'Model Output Shape = {self.model_output_shape}')
-        
+
         self.inference_thread = threading.Thread(target = self.infer)
         self.inference_thread.start()
-    
+
     def start(self):
         self.is_start = True
         self.is_pause = False
@@ -83,17 +83,17 @@ class Inference:
         self.is_start = False
         self.is_pause = True
         self.is_stop = False
-    
+
     def stop(self):
         self.is_start = False
         self.is_pause = False
         self.is_stop = True
         self.camera.stop_camera()
 
-    def infer(self): 
+    def infer(self):
         while True:
             if self.is_stop: break
-            if self.is_pause: continue 
+            if self.is_pause: continue
             if self.is_start:
                 image_in = self.camera.get_frame()
                 if image_in is None: continue
@@ -102,44 +102,55 @@ class Inference:
                 image = cv2.resize(orig_image, (self.MODEL_WIDTH, self.MODEL_HEIGHT))
                 out_results = None
 
-                infer_start_time = time.time()
+                pre_post_start_time, infer_start_time = time.time(), time.time()
+                pre_post_end_time, infer_end_time = time.time(), time.time()
 
                 if self.model_type == 'pytorch':
                     with torch.no_grad():
+                        infer_start_time = time.time()
                         out_results = self.model.predict(source = image)
+                        infer_end_time = time.time()
                 elif self.model_type == 'onnx':
                     image = io_utuls.preprocess(image, input_range=[0, 1])
                     image = image.transpose([2,0,1])
                     image = image[np.newaxis, ...]
+                    infer_start_time = time.time()
                     out_results = self.model.run(None, {'images': image.astype(np.float32)})[0]
-                    out_results = torch.from_numpy(np.array(out_results).reshape(self.model_output_shape)).cpu()
+                    infer_end_time = time.time()
+                    out_results = torch.from_numpy(np.array(out_results)).cpu()
                     out_results = io_utuls.postprocess(out_results, self.model_input_shape, image_in.shape)
                 elif self.model_type == 'tensorrt':
                     image = io_utuls.preprocess(image, input_range=[0, 1])
                     image = image.transpose([2,0,1])
                     image = image[np.newaxis, ...]
-                    out_results = self.model(image.astype(np.float32))[1]
-                    out_results = torch.from_numpy(np.array(out_results).reshape(self.model_output_shape)).cpu()
+                    infer_start_time = time.time()
+                    out_results = self.model(image.astype(np.float32))[0]
+                    infer_end_time = time.time()
+                    out_results = torch.from_numpy(np.array(out_results)).cpu()
                     out_results = io_utuls.postprocess(out_results, self.model_input_shape, image_in.shape)
-                
-                infer_end_time = time.time()
+
+                pre_post_end_time = time.time()
 
                 fps = 1./(infer_end_time - infer_start_time)
                 self.fps_arr.append(fps)
                 if len(self.fps_arr)>100: self.fps_arr = self.fps_arr[-100:]
                 self.fps = round(np.mean(self.fps_arr),2)
-                
+
                 message = {}
                 message['UTCTime'] = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')
                 message['InferenceTime'] = (infer_end_time - infer_start_time)*1000.
+                message['PrePostProcessingTime'] = (pre_post_end_time - pre_post_start_time - (infer_end_time - infer_start_time))*1000.
+                message['TotalTime'] = message['InferenceTime'] + message['PrePostProcessingTime']
                 message['FPS'] = self.fps
                 message['ModelFormat'] = self.model_type.upper()
 
                 InferenceClasses = []
                 message['InferenceOutput'] = "NONE"
+                message['ModelType'] = 'NONE'
+                result = None
                 if out_results is not None and self.model_type == 'pytorch':
                     for result in out_results:
-                        if len(result)==0: continue
+                        if result is None or result==[]: continue
                         if result.boxes:
                             message['ModelType'] = 'Object Detection'
                             if torch.cuda.is_available(): message['InferenceOutput'] = result.boxes.cpu().numpy().data.tolist()
@@ -149,10 +160,11 @@ class Inference:
                             message['ModelType'] = 'Segmentation'
                             if torch.cuda.is_available(): message['InferenceOutput'] =  result.masks.cpu().numpy().data.tolist()
                             else: message['InferenceOutput'] =  result.masks.numpy().data.tolist()
-                        elif result.preds:
+                        elif result.probs:
                             message['ModelType'] = 'Classification'
                             if torch.cuda.is_available(): message['InferenceOutput'] =  result.preds.cpu().numpy().tolist()
                             else: message['InferenceOutput'] =  result.preds.numpy().tolist()
+                        else: continue
                 elif out_results is not None and self.model_type == 'onnx':
                     for result in out_results:
                         if len(self.model.get_outputs())>1:
@@ -169,11 +181,11 @@ class Inference:
                             message['ModelType'] = 'Object Detection'
                             InferenceClasses = classescount(classes2names(result))
                             message['InferenceOutput'] = result
-                
+
                 if message['ModelType'] == 'Object Detection':
                     for cls in InferenceClasses:
                         message['CLASS_' + cls] = InferenceClasses[cls]
-                
+
                 if len(message['InferenceOutput'])>1000:
                     message['InferenceOutput'] = "TBD"
 

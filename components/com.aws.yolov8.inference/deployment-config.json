@@ -1,11 +1,11 @@
 {
-  "targetArn": "arn:aws:iot:AWS_REGION:AWS_ACCOUNT_NUM:thing/DEV_IOT_THING",
-  "deploymentName": "DEV_IOT_THING_GROUP",
+  "targetArn": "arn:aws:iot:us-east-1:544929280463:thing/SeeedThing",
+  "deploymentName": "SeeedThingGroup",
   "components": {
     "com.aws.yolov8.inference": {
-      "componentVersion": "0.0.0",
+      "componentVersion": "0.1.44",
       "configurationUpdate": {
-        "merge": ""
+        "merge": "{\n  \"Configuration\": {\n    \"event_topic\": \"inference/input\",\n    \"output_topic\": \"inference/output\",\n    \"camera_id\": \"/home/kcsong/Pictures/990320_640.mov\",\n    \"model_loc\": \"/home/kcsong/deploy-yolov8-on-edge-using-aws-iot-greengrass/all_models/yolov8n-seg_640x640.trt\",\n    \"MODEL_HEIGHT\": 640,\n    \"MODEL_WIDTH\": 640\n  },\n  \"accessControl\": {\n    \"aws.greengrass.ipc.mqttproxy\": {\n      \"com.aws.yolov8.inference:mqttproxy:1\": {\n        \"operations\": [\n          \"*\"\n        ],\n        \"resources\": [\n          \"*\"\n        ]\n      }\n    }\n  }\n}"
       }
     }
   }

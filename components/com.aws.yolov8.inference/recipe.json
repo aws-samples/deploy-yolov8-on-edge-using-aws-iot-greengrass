@@ -9,8 +9,8 @@
       "Configuration": {
         "event_topic": "inference/input",
         "output_topic": "inference/output",
-        "camera_id": "0",
-        "model_loc": "models/yolov8n.trt",
+        "camera_id": "/home/kcsong/Pictures/990320_640.mov",
+        "model_loc": "/home/kcsong/deploy-yolov8-on-edge-using-aws-iot-greengrass/all_models/yolov8n-seg_640x640.trt",
         "MODEL_HEIGHT": 640,
         "MODEL_WIDTH": 640
       },
@@ -35,13 +35,23 @@
       },
       "Artifacts": [
         {
-          "URI": "s3://BUCKET_NAME/COMPONENT_NAME/COMPONENT_VERSION/greengrass.zip",
+          "URI": "s3://BUCKET_NAME/COMPONENT_NAME/COMPONENT_VERSION/com.aws.yolov8.inference.zip",
           "Unarchive": "ZIP"
         }
       ],
       "Lifecycle": {
+        "Install": {
+          "Script": "python3 -m pip install -r {artifacts:decompressedPath}/com.aws.yolov8.inference/requirements.txt",
+          "RequiresPrivilege": "true"
+        },
         "Run": {
-          "Script": ". {com.aws.yolov8.modules:work:path}/venv/bin/activate\npython3 -u {artifacts:decompressedPath}/greengrass/main.py --config '''{configuration:/Configuration}'''"
+          "Script": "python3 -u {artifacts:decompressedPath}/com.aws.yolov8.inference/main.py --config '''{configuration:/Configuration}'''",
+          "RequiresPrivilege": "true",
+          "Timeout": 1200
+        },
+        "Shutdown": {
+          "Script": "echo \"INFERENCE CODE SHUTTING DOWN\"",
+          "RequiresPrivilege": "true"
         }
       }
     }
