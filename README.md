@@ -78,10 +78,10 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
 2. Export the following variables in the Personal Laptop / EC2 Instance terminal:
     ```
     [On Personal Laptop / EC2 Instance - Configured to AWS]
-    export AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
-    export AWS_REGION="ADD_REGION"
-    export DEV_IOT_THING="NAME_OF_OF_THING"
-    export DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
+    $ export AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
+    $ export AWS_REGION="ADD_REGION"
+    $ export DEV_IOT_THING="NAME_OF_OF_THING"
+    $ export DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
     ```
 3. Edit the right model location and the camera/local_video to be used in the `components/com.aws.yolov8.inference/recipe.json` as follows:
     ```
@@ -139,10 +139,10 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
 - Export the following variables in the Personal Laptop / EC2 Instance terminal:
     ```
     [On Personal Laptop / EC2 Instance - Configured to AWS]
-    export AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
-    export AWS_REGION="ADD_REGION"
-    export DEV_IOT_THING="NAME_OF_OF_THING"
-    export DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
+    $ export AWS_ACCOUNT_NUM="ADD_ACCOUNT_NUMBER"
+    $ export AWS_REGION="ADD_REGION"
+    $ export DEV_IOT_THING="NAME_OF_OF_THING"
+    $ export DEV_IOT_THING_GROUP="NAME_OF_IOT_THING_GROUP"
     ```
 - Run the code as follows to cleanup:
     ```
