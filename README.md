@@ -123,17 +123,17 @@ Edit the details of the AWS Account, `IoT Thing` and `IoT Thing Group` in the `c
 3. Select `start`, `pause` or `stop` for starting/pausing/stopping inference.
 4. Once the inference starts, you can see the output returning to the console.
 
-### (2.3) YOLOv8 Comparison on various NVIDIA Edge Devices:
-    ----------------------------------------------------------------------------------------------
-    |    Model    |      NVIDIA      |        YOLOv8n (ms)         |      YOLOv8n-seg (ms)       |
-    |    Input    |       Edge       |---------|--------|----------|---------|--------|----------|
-    |   [H x W]   |      Device      | PyTorch |  ONNX  | TensorRT | PyTorch |  ONNX  | TensorRT |
-    |-------------|------------------|---------|--------|----------|---------|--------|----------|
-    | [640 x 640] |      Seeed       |  59.32  |  58.82 |   44.87  |  82.54  | 168.85 |  146.10  |
-    | [480 x 640] |      Studio      |  46.31  |  48.27 |   38.46  |  65.99  | 121.29 |  103.27  |
-    | [320 x 320] |      J4012       |  62.14  |  24.46 |   20.75  |  87.26  |  35.12 |   32.37  |
-    | [224 x 224] |  Orin NX 16 GB   |  61.68  |  18.58 |   13.84  |  84.03  |  23.64 |   18.51  |
-    ----------------------------------------------------------------------------------------------
+### (2.3) YOLOv8 Comparison on various NVIDIA Edge Devices (Pre-Processing + Inference + Post-Processing):
+    ------------------------------------------------------------------------------
+    |    Model    |      NVIDIA      |     YOLOv8n (ms)    |   YOLOv8n-seg (ms)  |
+    |    Input    |       Edge       |---------|-----------|---------|-----------|
+    |   [H x W]   |      Device      | PyTorch |  TensorRT | PyTorch |  TensorRT |
+    |-------------|------------------|---------|-----------|---------|-----------|
+    | [640 x 640] |      Seeed       |  27.54  |   25.65   |  32.05  |   29.25   |
+    | [480 x 640] |      Studio      |  23.16  |   19.86   |  24.65  |   23.07   |
+    | [320 x 320] |      J4012       |  29.77  |    8.68   |  34.28  |   10.83   |
+    | [224 x 224] |  Orin NX 16 GB   |  29.45  |    5.73   |  31.73  |    7.43   |
+    ------------------------------------------------------------------------------
 
 ### (2.4) Cleanup of the GG Components and Deployment
 - Use the `com.aws.yolov8.inference/cleanup_gg.py` to clean the Greengrass Components and Deployment.
