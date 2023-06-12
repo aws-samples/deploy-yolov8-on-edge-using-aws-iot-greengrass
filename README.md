@@ -13,7 +13,7 @@ For YOLOv5 TensorFlow deployment on SageMaker Endpoint, kindly refer to the [Git
 ## 1. Setup Edge Device:
 ### (1.1) How to Install Dependencies?
 - Use the script `install_dependencies.sh` script on the Edge device to install the right dependencies.
-- Curently Seeed Studio reComputer J4012 comes with JetPack 5.1 and uses CUDA 11.4.
+- Curently [Seeed Studio reComputer J4012](https://www.seeedstudio.com/reComputer-J4012-p-5586.html) comes with JetPack 5.1 and uses CUDA 11.4.
     ```
     $ chmod u+x install_dependencies.sh
     $ ./install_dependencies.sh
