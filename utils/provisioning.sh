@@ -101,7 +101,7 @@ function provision_device()
     pushd greengrass_files
     curl -s https://d2s8p88vqu9w66.cloudfront.net/releases/greengrass-nucleus-latest.zip > greengrass-nucleus-latest.zip
     unzip -o greengrass-nucleus-latest.zip -d GreengrassInstaller && rm greengrass-nucleus-latest.zip
-    sudo -E java -Droot="/greengrass/v2" -Dlog.store=FILE -jar ./GreengrassInstaller/lib/Greengrass.jar --aws-region us-east-1 --thing-name $IOT_THING_NAME --thing-group-name $IOT_THING_GROUP --component-default-user ggc_user:ggc_group --provision true --setup-system-service true --deploy-dev-tools true --thing-policy-name GreengrassV2IoTThingPolicy --tes-role-name GreengrassV2TokenExchangeRole
+    sudo -E java -Droot="/greengrass/v2" -Dlog.store=FILE -jar ./GreengrassInstaller/lib/Greengrass.jar --thing-name $IOT_THING_NAME --thing-group-name $IOT_THING_GROUP --component-default-user ggc_user:ggc_group --provision true --setup-system-service true --deploy-dev-tools true --thing-policy-name GreengrassV2IoTThingPolicy --tes-role-name GreengrassV2TokenExchangeRole
     popd
     rm -rf greengrass_files
 }
