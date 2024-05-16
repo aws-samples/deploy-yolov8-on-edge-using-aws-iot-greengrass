@@ -17,7 +17,7 @@ python3 -m pip install --no-cache $TORCH_INSTALL --upgrade
 echo "Installing TorchVision CUDA"
 git clone -b v0.14.0 https://github.com/pytorch/vision torchvision-0140
 pushd torchvision-0140
-sudo python3 setup.py install
+python3 setup.py install --user
 popd
 rm -rf torchvision-0140
 
